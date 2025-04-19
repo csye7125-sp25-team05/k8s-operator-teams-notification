@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: namespace-change-notifier
+  namespace: ns-monitoring
+  labels:
+    app: namespace-change-notifier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: namespace-change-notifier
+  template:
+    metadata:
+      labels:
+        app: namespace-change-notifier
+    spec:
+      serviceAccountName: namespace-watcher
+      containers:
+      - name: notifier
+        image: mayu007/namespace-change-notifier:t1
+        imagePullPolicy: Always
+        env:
+        - name: WATCH_NAMESPACE
+          value: "api-server"  # Set this to the namespace you want to monitor
+        - name: TEAMS_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: teams-webhook-secret
+              key: webhook-url
+        resources:
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
